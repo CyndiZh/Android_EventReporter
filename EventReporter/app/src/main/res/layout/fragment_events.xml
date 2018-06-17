@@ -6,6 +6,8 @@
     tools:context=".EventsFragment">
 
     <LinearLayout
+
+
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
@@ -34,7 +36,15 @@
                 android:layout_alignParentEnd="true"
                 android:layout_marginEnd="15dp" />
         </RelativeLayout>
-    </LinearLayout>
+
+        <!-- This recycler view shows Event data to customers-->
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/event_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="vertical" />
+
+</LinearLayout>
 
 
 </FrameLayout>

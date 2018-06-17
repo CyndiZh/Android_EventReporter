@@ -13,6 +13,8 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -20,6 +22,9 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,13 +44,16 @@ public class EventReportActivity extends AppCompatActivity {
     //Set variables ready for picking images
     private static int RESULT_LOAD_IMAGE = 1;
     private ImageView img_event_picture;
-    private Uri mImgUri;
-
+    private Uri mImgUri;    // local file reference
+    //Set variables ready for authentication
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
-
+    //Set variables ready for location tracker
     private LocationTracker mLocationTracker;
     private boolean showLocation;
+    //Set variables ready for uploading images
+    private FirebaseStorage storage;
+    private StorageReference storageRef;
 
 
     @Override
@@ -60,12 +68,21 @@ public class EventReportActivity extends AppCompatActivity {
         mImageViewSend = (ImageView) findViewById(R.id.img_event_report);
         img_event_picture = (ImageView) findViewById(R.id.img_event_picture_capture);
 
+        //Initialize database instance
         database = FirebaseDatabase.getInstance().getReference();
+
+        //Initialize cloud storage
+        storage = FirebaseStorage.getInstance();
+        storageRef = storage.getReference();
 
         mImageViewSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String key = uploadEvent();
+                if (mImgUri != null) {
+                    uploadImage(key);
+                    mImgUri = null;
+                }
             }
         });
 
@@ -111,14 +128,13 @@ public class EventReportActivity extends AppCompatActivity {
         mImageViewCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // implicit intent
                 Intent intent = new Intent(
                         Intent.ACTION_PICK,
                         android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(intent, RESULT_LOAD_IMAGE);
+                startActivityForResult(intent, RESULT_LOAD_IMAGE);  // trigger onActivityResult()
             }
         });
-
-
 
         mAuth = FirebaseAuth.getInstance();
         //Add listener to check sign in status
@@ -187,6 +203,10 @@ public class EventReportActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Upload event created by user
+     * @param
+     */
     private String uploadEvent() {
         String title = mEditTextTitle.getText().toString();
         String location = mEditTextLocation.getText().toString();
@@ -223,5 +243,35 @@ public class EventReportActivity extends AppCompatActivity {
         return key;
     }
 
+    /**
+     * Upload image picked up from gallery to Firebase Cloud storage
+     * @param eventId eventId
+     */
+    private void uploadImage(final String eventId) {
+        if (mImgUri == null) {
+            return;
+        }
+        StorageReference imgRef = storageRef.child("images/" + mImgUri.getLastPathSegment() + "_"
+                + System.currentTimeMillis());
+
+        UploadTask uploadTask = imgRef.putFile(mImgUri);
+
+        // Register observers to listen for when the download is done or if it fails
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle unsuccessful uploads
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                @SuppressWarnings("VisibleForTests")
+                Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                Log.i(TAG, "upload successfully" + eventId);
+                database.child("events").child(eventId).child("imgUri").
+                        setValue(downloadUrl.toString());
+            }
+        });
+    }
 
 }
