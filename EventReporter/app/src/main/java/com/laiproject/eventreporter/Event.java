@@ -13,6 +13,8 @@ public class Event {
     private String address;
     private String description;
 
+    private int CommentNumber;
+
     /**
      * Constructor
      */
@@ -91,7 +93,8 @@ public class Event {
         this.imgUri = imgUri;
     }
 
+    public int getCommentNumber() { return CommentNumber; }
 
-
+    public void setCommentNumber(int commentNumber) { CommentNumber = commentNumber; }
 
 }

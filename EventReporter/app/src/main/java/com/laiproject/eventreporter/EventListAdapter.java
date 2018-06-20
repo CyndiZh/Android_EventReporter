@@ -1,6 +1,10 @@
 package com.laiproject.eventreporter;
 
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,16 +12,26 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.util.List;
 
 public class EventListAdapter extends RecyclerView.Adapter<EventListAdapter.ViewHolder> {
     private List<Event> eventList;
+    private DatabaseReference databaseReference;
+    private Context context;
 
     /**
      * Constructor for EventListAdapter
      * @param events events that are showing on screen
      */
-    public EventListAdapter(List<Event> events) {
+    public EventListAdapter(List<Event> events, Context context) {
+        this.context = context;
+        databaseReference = FirebaseDatabase.getInstance().getReference();
         eventList = events;
     }
 
@@ -32,16 +46,29 @@ public class EventListAdapter extends RecyclerView.Adapter<EventListAdapter.View
         public TextView description;
         public TextView time;
         public ImageView imgview;
+        public ImageView img_view_good;
+        public ImageView img_view_comment;
+
+        public TextView good_number;
+        public TextView comment_number;
+
         public View layout;
+
+
 
         public ViewHolder(View v) {
             super(v);
-            layout = v;
+            layout = v;     // find id in xml of parent of View v
             title = (TextView) v.findViewById(R.id.event_item_title);
             location = (TextView) v.findViewById(R.id.event_item_location);
             description = (TextView) v.findViewById(R.id.event_item_description);
             time = (TextView) v.findViewById(R.id.event_item_time);
             imgview = (ImageView) v.findViewById(R.id.event_item_img);
+
+            img_view_good = (ImageView) v.findViewById(R.id.event_good_img);
+            img_view_comment = (ImageView) v.findViewById(R.id.event_comment_img);
+            good_number = (TextView) v.findViewById(R.id.event_good_number);
+            comment_number = (TextView) v.findViewById(R.id.event_comment_number);
         }
     }
 
@@ -57,10 +84,69 @@ public class EventListAdapter extends RecyclerView.Adapter<EventListAdapter.View
         String[] locations = event.getAddress().split(",");
         holder.location.setText(locations[1] + "," + locations[2]);
         holder.description.setText(event.getDescription());
-        holder.time.setText(String.valueOf(event.getTime()));
+        holder.time.setText(String.valueOf(Utils.timeTransformer(event.getTime())));   // change date type
+
+        holder.good_number.setText(String.valueOf(event.getLike()));
+
 /*        if (event.getImgUri() != null) {
             holder.imgview.setImageURI(Uri.parse(event.getImgUri()));
         }*/
+        if (event.getImgUri() != null) {
+            final String url = event.getImgUri();
+            holder.imgview.setVisibility(View.VISIBLE);
+            new AsyncTask<Void, Void, Bitmap>(){
+                @Override
+                protected Bitmap doInBackground(Void... params) {
+                    return Utils.getBitmapFromURL(url);
+                }
+
+                @Override
+                protected void onPostExecute(Bitmap bitmap) {
+                    holder.imgview.setImageBitmap(bitmap);
+                }
+            }.execute();
+        } else {
+            holder.imgview.setVisibility(View.GONE);
+        }
+
+
+        //When user likes the event, push like number to firebase database
+        holder.img_view_good.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                databaseReference.child("events").addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            Event recordedevent = snapshot.getValue(Event.class);
+                            if (recordedevent.getId().equals(event.getId())) {
+                                int number = recordedevent.getLike();
+                                holder.good_number.setText(String.valueOf(number + 1));
+                                snapshot.getRef().child("like").setValue(number + 1);
+                                break;
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+            }
+        });
+
+        holder.img_view_comment.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(context, CommentActivity.class);
+                String eventId = event.getId();
+                intent.putExtra("EventID", eventId);
+                context.startActivity(intent);
+            }
+        });
+
+
     }
 
     /**
