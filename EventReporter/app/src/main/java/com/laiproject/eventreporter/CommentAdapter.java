@@ -173,17 +173,14 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         holder.eventImgViewGood.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                databaseReference.child("events").addListenerForSingleValueEvent(new ValueEventListener() {
+                databaseReference.child("events").child(event.getId()).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                            Event recordedevent = snapshot.getValue(Event.class);
-                            if (recordedevent.getId().equals(event.getId())) {
-                                int number = recordedevent.getLike();
-                                holder.eventLikeNumber.setText(String.valueOf(number + 1));
-                                snapshot.getRef().child("like").setValue(number + 1);
-                                break;
-                            }
+                        Event recordedevent = dataSnapshot.getValue(Event.class);
+                        if (recordedevent != null) {
+                            int number = recordedevent.getLike();
+                            holder.eventLikeNumber.setText(String.valueOf(number + 1));
+                            dataSnapshot.getRef().child("like").setValue(number + 1);
                         }
                     }
 

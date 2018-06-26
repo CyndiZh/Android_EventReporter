@@ -15,6 +15,5 @@ public class EventActivity extends AppCompatActivity {
         }
         getSupportFragmentManager().beginTransaction().
                 add(R.id.relativelayout_event, mEventsFragment).commit();
-
     }
 }

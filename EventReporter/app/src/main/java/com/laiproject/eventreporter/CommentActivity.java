@@ -106,14 +106,12 @@ public class CommentActivity extends AppCompatActivity {
                 commentAdapter.setComments(comments);
 
 
-                DataSnapshot eventSnapshot = dataSnapshot.child("events");
-                for (DataSnapshot noteDataSnapshot : eventSnapshot.getChildren()) {
-                    Event event = noteDataSnapshot.getValue(Event.class);
-                    if(event.getId().equals(eventId)) {
-                        commentAdapter.setEvent(event);
-                        break;
-                    }
+                DataSnapshot eventSnapshot = dataSnapshot.child("events").child(eventId);
+                if (eventSnapshot != null) {
+                    Event event = eventSnapshot.getValue(Event.class);
+                    commentAdapter.setEvent(event);
                 }
+
                 if (mRecyclerView.getAdapter() != null) {
                     commentAdapter.notifyDataSetChanged();
                 } else {
