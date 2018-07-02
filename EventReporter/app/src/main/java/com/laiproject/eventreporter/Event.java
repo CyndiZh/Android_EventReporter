@@ -15,15 +15,18 @@ public class Event {
 
     private int CommentNumber;
 
-    /**
-     * Constructor
-     */
     private int like;
     private String id;
     private long time;
     private String username;
     private String imgUri;
 
+    private double latitude;
+    private double longitude;
+
+    /**
+     * Constructor
+     */
     public Event() {}
 
     public Event(String title, String address, String description) {
@@ -96,5 +99,14 @@ public class Event {
     public int getCommentNumber() { return CommentNumber; }
 
     public void setCommentNumber(int commentNumber) { CommentNumber = commentNumber; }
+
+    public double getLatitude() { return latitude;    }
+
+    public void setLatitude(double latitude) { this.latitude = latitude;    }
+
+    public double getLongitude() { return longitude;    }
+
+    public void setLongitude(double longitude) { this.longitude = longitude;    }
+
 
 }
