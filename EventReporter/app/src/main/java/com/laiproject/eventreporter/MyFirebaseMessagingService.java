@@ -36,7 +36,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         }
 
-        sendNotification("Send notification to start EventReporter");
+        sendNotification(remoteMessage);
 
         // Check if message contains a notification payload.
         if (remoteMessage.getNotification() != null) {
@@ -55,7 +55,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     /**
      * Create and show a simple notification containing the received FCM message.
      */
-    private void sendNotification(String fcmmessage) {
+    private void sendNotification(RemoteMessage remoteMessage) {
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
@@ -69,9 +69,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this, "EventReporter");
         notificationBuilder
+                .setLargeIcon(Utils.getBitmapFromURL(remoteMessage.getData().get("imgUri")))
                 .setSmallIcon(R.drawable.icon)
-                .setContentTitle("FCM Message")
-                .setContentText(fcmmessage)
+                .setContentTitle(remoteMessage.getData().get("title"))
+                .setContentText(remoteMessage.getData().get("description"))
                 .setAutoCancel(true)
                 .setSound(defaultSoundUri)
                 .setContentIntent(pendingIntent);

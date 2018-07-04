@@ -76,7 +76,7 @@ public class EventListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         eventList = new ArrayList<Event>();
         int count = 0;
         for (int i = 0; i < events.size(); i++) {
-            if (i % 2 == 1) {
+            if (i % 3 == 1) {
                 map.put(i + count, new Object());
                 count++;
                 eventList.add(new Event());

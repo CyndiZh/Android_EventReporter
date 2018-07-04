@@ -50,4 +50,10 @@ public class EventActivity extends AppCompatActivity {
                 });
 
     }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+    }
 }
